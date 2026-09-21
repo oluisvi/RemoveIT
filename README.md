@@ -11,8 +11,9 @@ O **RemoveIT** analisa uma imagem, sugere as regiões que parecem fazer parte da
 
 - Upload de JPG, PNG e WebP com até **20 MB** e **40 milhões de pixels**.
 - Detecção automática da provável região da marca d'água.
-- Editor de máscara com pincel, borracha, tamanho ajustável e desfazer.
-- Reconstrução da área selecionada por *inpainting*.
+- Editor de máscara com pincel de até 1 px, borracha, zoom, movimentação e desfazer.
+- Reconstrução por LaMa quando o pacote de IA está instalado, com fallback OpenCV.
+- Redetecção da máscara sem precisar reenviar a imagem.
 - Comparação interativa entre original e resultado.
 - Download do resultado em PNG.
 - Histórico da sessão atual.
@@ -86,6 +87,15 @@ $env:INFERENCE_SERVICE_TOKEN="replace-with-a-long-random-token"
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
+O comando acima instala o modo leve. Para habilitar a reconstrução com o modelo LaMa local (download maior e primeira execução mais lenta), use:
+
+```powershell
+pip install -e ".[ml]"
+$env:INPAINT_ENGINE="auto"
+```
+
+Em `auto`, o serviço usa LaMa quando disponível e recua para OpenCV se o modelo opcional não estiver instalado. Para exigir a IA sem fallback, use `INPAINT_ENGINE=lama`; para o modo leve, `INPAINT_ENGINE=opencv`.
+
 Se o PowerShell bloquear a ativação do ambiente virtual:
 
 ```powershell
@@ -140,6 +150,7 @@ Use `Ctrl+C` nos dois terminais para encerrar.
 | `INFERENCE_SERVICE_URL` | `http://127.0.0.1:8000` | Endereço do serviço Python |
 | `INFERENCE_SERVICE_TOKEN` | `local-development` no código | Token Bearer compartilhado entre Next.js e FastAPI |
 | `INFERENCE_TIMEOUT_MS` | `90000` | Tempo máximo de uma operação de processamento |
+| `INPAINT_ENGINE` | `auto` | Seleciona `auto`, `lama` ou `opencv` no serviço Python |
 | `JOB_TTL_MINUTES` | `30` | Vida útil de cada job |
 | `SESSION_SECRET` | valor local interno | Assinatura do cookie de sessão |
 | `CLEANUP_SECRET` | valor local interno | Proteção da rota interna de limpeza |
@@ -174,6 +185,7 @@ python -m pytest tests -q
 | `POST` | `/api/jobs` | Valida a autorização, recebe a imagem e cria o job |
 | `GET` | `/api/jobs/:jobId` | Consulta o estado do job |
 | `PUT` | `/api/jobs/:jobId/mask` | Salva a máscara revisada |
+| `POST` | `/api/jobs/:jobId/redetect` | Executa novamente a detecção sobre a imagem original |
 | `POST` | `/api/jobs/:jobId/process` | Inicia a reconstrução |
 | `GET` | `/api/jobs/:jobId/result` | Entrega original, máscara ou resultado autorizado |
 | `DELETE` | `/api/jobs/:jobId` | Cancela e remove o job |
@@ -206,10 +218,11 @@ RemoveIT/
 
 ## Limitações atuais
 
-A versão atual usa visão computacional clássica para sugerir a máscara e OpenCV Telea para reconstruir a região removida. Isso mantém o projeto leve e executável em CPU, mas impõe alguns limites:
+A versão atual usa visão computacional clássica e filtros conservadores para sugerir a máscara. Na reconstrução, pode usar LaMa localmente ou OpenCV Navier–Stokes como fallback leve. Isso mantém o projeto executável em CPU, mas ainda impõe alguns limites:
 
 - marcas translúcidas, muito grandes ou misturadas a texturas complexas podem exigir ajuste manual;
-- o preenchimento pode ficar perceptível em rostos, textos, padrões repetitivos ou áreas com muitos detalhes;
+- o fallback OpenCV pode ficar perceptível em rostos, textos, padrões repetitivos ou áreas com muitos detalhes;
+- o modo LaMa consome mais memória e pode baixar os pesos do modelo na primeira utilização;
 - o armazenamento em disco e os limites em memória foram pensados para uma única instância local;
 - o histórico existe apenas durante a sessão e enquanto os arquivos temporários não expirarem.
 

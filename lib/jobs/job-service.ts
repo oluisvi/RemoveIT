@@ -32,6 +32,19 @@ export class JobService {
     return this.store.update(id, sessionId, { status: "review" });
   }
 
+  async redetect(id: string, sessionId: string): Promise<Job> {
+    const job = await this.require(id, sessionId);
+    if (!job.originalPath || !job.maskPath) throw new Error("Trabalho incompleto.");
+    const detection = await this.provider.detect(await readFile(job.originalPath), AbortSignal.timeout(this.timeoutMs));
+    await writeFile(job.maskPath, detection.mask);
+    return this.store.update(id, sessionId, {
+      status: "review",
+      confidence: detection.confidence,
+      warnings: detection.warnings,
+      error: undefined,
+    });
+  }
+
   async process(id: string, sessionId: string): Promise<Job> {
     const job = await this.require(id, sessionId);
     if (!job.originalPath || !job.maskPath) throw new Error("Trabalho incompleto.");
