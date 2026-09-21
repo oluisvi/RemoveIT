@@ -5,6 +5,7 @@ const eventName = "removeit-history-change";
 export function SessionHistory({ jobId, onOpen }: { jobId: string; onOpen?: (id: string) => void }) {
   const [ids, setIds] = useState<string[]>([jobId]);
   useEffect(() => {
+    if (jobId === "current") return;
     const listener = (event: Event) => setIds((event as CustomEvent<string[]>).detail);
     window.addEventListener(eventName, listener);
     const stored = JSON.parse(sessionStorage.getItem("removeit_jobs") || "[]") as string[];
