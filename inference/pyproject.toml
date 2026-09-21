@@ -6,17 +6,15 @@ dependencies = [
   "fastapi>=0.117,<1",
   "uvicorn[standard]>=0.35,<1",
   "pillow>=11.3,<13",
-  "numpy>=1.24.3,<2",
-  "opencv-python-headless>=4.10,<4.12",
+  "numpy>=1.26.4,<3",
+  "opencv-python>=4.11,<5",
   "python-multipart>=0.0.20,<1",
   "pydantic>=2.11,<3"
 ]
 
 [project.optional-dependencies]
 ml = [
-  "torch>=2.7,<3",
-  "transformers>=4.56,<6",
-  "simple-lama-inpainting>=0.1.2,<1"
+  "simple-lama-inpainting-updated>=0.1.3,<1"
 ]
 test = ["pytest>=8.4,<10", "httpx>=0.28,<1"]
 
