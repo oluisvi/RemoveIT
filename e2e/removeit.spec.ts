@@ -5,6 +5,7 @@ const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQ
 test("conclui upload, revisão, remoção e download", async ({ page }) => {
   await page.route("**/api/jobs", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ jobId: "j1", status: "review", imageUrl: "/mock-original", maskUrl: "/mock-mask", confidence: .94, warnings: [] }) }));
   await page.route("**/api/jobs/j1/process", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "complete", resultUrl: "/mock-result" }) }));
+  await page.route("**/api/jobs/j1/mask", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "review" }) }));
   await page.route(/mock-(original|mask|result)/, (route) => route.fulfill({ status: 200, contentType: "image/png", body: pixel }));
   await page.goto("/");
   await page.getByLabel(/possuo ou tenho autorização/i).check();

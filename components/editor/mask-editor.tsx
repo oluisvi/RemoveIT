@@ -1,26 +1,16 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import { useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditorToolbar } from "./editor-toolbar";
 import type { MaskTool } from "./mask-canvas";
-
-type Props = { imageUrl: string; maskUrl: string; confidence: number; onProcess: (mask?: Blob) => void; busy?: boolean; message?: string };
-
-export function MaskEditor({ imageUrl, maskUrl, confidence, onProcess, busy, message }: Props) {
-  const [tool, setTool] = useState<MaskTool>("paint");
-  const [brush, setBrush] = useState(32);
-  const level = confidence >= .75 ? "alta" : confidence >= .4 ? "média" : "baixa";
-  return <section className="editor-shell" data-testid="mask-editor">
-    <header className="editor-header"><div><span>Etapa 2 de 3</span><h2>Revise a área detectada</h2></div><div className={`confidence confidence-${level}`}><CheckCircle2 size={16} /> Confiança {level} · {Math.round(confidence * 100)}%</div></header>
-    <div className="editor-grid">
-      <EditorToolbar tool={tool} onTool={setTool} />
-      <div className="image-stage" aria-label="Prévia da imagem e máscara">
-        <img src={imageUrl} alt="Imagem original para edição" />
-        <img className="mask-overlay" src={maskUrl} alt="Máscara detectada pela IA" />
-      </div>
-      <aside className="editor-controls"><div className="ai-notice"><strong>Marca d&apos;água encontrada</strong><p>A área em roxo será reconstruída. Use as ferramentas para corrigir.</p></div><label>Tamanho do pincel <output>{brush} px</output><input type="range" min="4" max="96" value={brush} onChange={(e) => setBrush(Number(e.target.value))} /></label><Button onClick={() => onProcess()} disabled={busy}>{busy ? "Reconstruindo…" : "Remover marca d'água"}</Button><button className="text-action"><RotateCcw size={14} /> Redetectar</button><p role="status">{message}</p></aside>
-    </div>
-  </section>;
-}
+type Props={imageUrl:string;maskUrl:string;confidence:number;onProcess:(mask?:Blob)=>void;onCancel?:()=>void;busy?:boolean;message?:string};
+export function MaskEditor({imageUrl,maskUrl,confidence,onProcess,onCancel,busy,message}:Props){
+ const [tool,setTool]=useState<MaskTool>("paint"),[brush,setBrush]=useState(32);const canvasRef=useRef<HTMLCanvasElement>(null),drawing=useRef(false),history=useRef<ImageData[]>([]);const level=confidence>=.75?"alta":confidence>=.4?"média":"baixa";
+ useEffect(()=>{const canvas=canvasRef.current;if(!canvas)return;const image=new Image();image.src=maskUrl;image.onload=()=>{canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;canvas.getContext("2d")?.drawImage(image,0,0)}},[maskUrl]);
+ useEffect(()=>{const key=(event:KeyboardEvent)=>{if(event.key.toLowerCase()==="b")setTool("paint");if(event.key.toLowerCase()==="e")setTool("erase");if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="z"){event.preventDefault();const previous=history.current.pop();if(previous)canvasRef.current?.getContext("2d")?.putImageData(previous,0,0)}};window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key)},[]);
+ function draw(event:PointerEvent<HTMLCanvasElement>){if(!drawing.current||tool==="pan")return;const canvas=canvasRef.current!,rect=canvas.getBoundingClientRect(),context=canvas.getContext("2d")!,x=(event.clientX-rect.left)*canvas.width/rect.width,y=(event.clientY-rect.top)*canvas.height/rect.height;context.globalCompositeOperation=tool==="erase"?"destination-out":"source-over";context.fillStyle="white";context.beginPath();context.arc(x,y,brush*canvas.width/Math.max(1,canvas.clientWidth),0,Math.PI*2);context.fill()}
+ function begin(event:PointerEvent<HTMLCanvasElement>){const canvas=canvasRef.current!,context=canvas.getContext("2d")!;history.current.push(context.getImageData(0,0,canvas.width,canvas.height));if(history.current.length>20)history.current.shift();drawing.current=true;canvas.setPointerCapture(event.pointerId);draw(event)}
+ function submit(){canvasRef.current?.toBlob(blob=>{if(blob)onProcess(blob)},"image/png")}
+ return <section className="editor-shell" data-testid="mask-editor"><header className="editor-header"><div><span>Etapa 2 de 3</span><h2>Revise a área detectada</h2></div><div className={`confidence confidence-${level}`}><CheckCircle2 size={16}/> Confiança {level} · {Math.round(confidence*100)}%</div></header><div className="editor-grid"><EditorToolbar tool={tool} onTool={setTool}/><div className="image-stage"><img src={imageUrl} alt="Imagem original para edição"/><canvas ref={canvasRef} className="mask-overlay" aria-label="Editar máscara; B pinta, E apaga e Ctrl+Z desfaz" tabIndex={0} onPointerDown={begin} onPointerMove={draw} onPointerUp={()=>drawing.current=false}/></div><aside className="editor-controls"><div className="ai-notice"><strong>{level==="baixa"?"Revise manualmente":"Marca d'água encontrada"}</strong><p>A área em roxo será reconstruída. Use as ferramentas para corrigir.</p></div><label>Tamanho do pincel <output>{brush} px</output><input type="range" min="4" max="96" value={brush} onChange={e=>setBrush(Number(e.target.value))}/></label><Button onClick={submit} disabled={busy}>{busy?"Reconstruindo…":"Remover marca d'água"}</Button>{busy&&<button className="text-action" onClick={onCancel}>Cancelar processamento</button>}<button className="text-action"><RotateCcw size={14}/> Redetectar</button><p role="status">{message}</p></aside></div></section>}

@@ -11,9 +11,11 @@ export const jobStore = new FileJobStore(root);
 export const inferenceProvider = new HttpInferenceProvider(env.INFERENCE_SERVICE_URL, env.INFERENCE_SERVICE_TOKEN);
 export const jobService = new JobService(jobStore, inferenceProvider, root, env.INFERENCE_TIMEOUT_MS);
 export const creationLimiter = new MemoryRateLimiter(5, 60_000);
+export const originLimiter = new MemoryRateLimiter(20, 60_000);
+export const processingLimiter = new MemoryRateLimiter(10, 60 * 60_000);
 
 export function requestSession(request: Request): string {
   const token = request.headers.get("cookie")?.match(/(?:^|; )removeit_session=([^;]+)/)?.[1];
-  return token ? verifySessionToken(decodeURIComponent(token), env.SESSION_SECRET) || "invalid" : request.headers.get("x-removeit-session") || "anonymous";
+  return token ? verifySessionToken(decodeURIComponent(token), env.SESSION_SECRET) || "invalid" : "anonymous";
 }
 export function issueSession() { const token = newSessionToken(env.SESSION_SECRET); return { id: verifySessionToken(token, env.SESSION_SECRET)!, cookie: `removeit_session=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400${process.env.NODE_ENV === "production" ? "; Secure" : ""}` }; }

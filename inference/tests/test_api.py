@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from app.main import app
 
-client = TestClient(app)
+client = TestClient(app, headers={"Authorization": "Bearer local-development"})
 
 def test_detect_returns_normalized_mask_and_confidence(monkeypatch, sample_image, mask_bytes):
     monkeypatch.setattr("app.main.detect_watermark", lambda _: (mask_bytes, 0.94, ["overlay-text"]))
@@ -14,3 +14,6 @@ def test_detect_returns_normalized_mask_and_confidence(monkeypatch, sample_image
 def test_health():
     assert client.get("/health").json() == {"status": "ok"}
 
+def test_inference_requires_bearer_token(sample_image):
+    response = TestClient(app).post("/v1/detect", files={"image": ("input.png", sample_image, "image/png")})
+    assert response.status_code == 401
