@@ -55,7 +55,7 @@ Não existe banco de dados nesta versão. Os jobs e as imagens ficam em `.remove
 ## Requisitos
 
 - [Node.js](https://nodejs.org/) 20 ou superior.
-- [Python](https://www.python.org/) 3.12.
+- [Python](https://www.python.org/) 3.12 ou 3.13. O modo LaMa ainda não é compatível com Python 3.14 por causa da cadeia NumPy do pacote.
 - Git.
 - Windows PowerShell, Terminal ou shell equivalente.
 
