@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 import { useState } from "react";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,8 @@ export function MaskEditor({ imageUrl, maskUrl, confidence, onProcess, busy, mes
     <div className="editor-grid">
       <EditorToolbar tool={tool} onTool={setTool} />
       <div className="image-stage" aria-label="Prévia da imagem e máscara">
-        {/* The overlay is intentionally visible and editable controls remain outside the bitmap. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}<img src={imageUrl} alt="Imagem original para edição" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}<img className="mask-overlay" src={maskUrl} alt="Máscara detectada pela IA" />
+        <img src={imageUrl} alt="Imagem original para edição" />
+        <img className="mask-overlay" src={maskUrl} alt="Máscara detectada pela IA" />
       </div>
       <aside className="editor-controls"><div className="ai-notice"><strong>Marca d&apos;água encontrada</strong><p>A área em roxo será reconstruída. Use as ferramentas para corrigir.</p></div><label>Tamanho do pincel <output>{brush} px</output><input type="range" min="4" max="96" value={brush} onChange={(e) => setBrush(Number(e.target.value))} /></label><Button onClick={() => onProcess()} disabled={busy}>{busy ? "Reconstruindo…" : "Remover marca d'água"}</Button><button className="text-action"><RotateCcw size={14} /> Redetectar</button><p role="status">{message}</p></aside>
     </div>

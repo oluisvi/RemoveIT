@@ -13,7 +13,7 @@ export class ImageValidationError extends Error {
 
 const mimeByFormat = { jpeg: "image/jpeg", png: "image/png", webp: "image/webp" } as const;
 
-export async function validateImage(buffer: Buffer, _filename = "image"): Promise<ImageInfo> {
+export async function validateImage(buffer: Buffer): Promise<ImageInfo> {
   if (buffer.byteLength > MAX_IMAGE_BYTES) throw new ImageValidationError("FILE_TOO_LARGE", "A imagem deve ter no máximo 20 MB.");
   try {
     const metadata = await sharp(buffer, { failOn: "error", limitInputPixels: MAX_IMAGE_PIXELS }).metadata();

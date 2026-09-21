@@ -1,4 +1,4 @@
-import { jobService, jobStore, requestSession } from "@/lib/server/dependencies";
+import { jobStore, requestSession } from "@/lib/server/dependencies";
 
 export async function GET(request: Request, context: { params: Promise<{ jobId: string }> }) {
   const { jobId } = await context.params;
