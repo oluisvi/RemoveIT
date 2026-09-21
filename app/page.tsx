@@ -1,5 +1,5 @@
-import { ArrowUpRight, Check, ImageIcon, ShieldCheck, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowUpRight, Check, ShieldCheck, Sparkles } from "lucide-react";
+import { RemoveItWorkflow } from "@/components/workflow/removeit-workflow";
 
 export default function Home() {
   return (
@@ -21,13 +21,7 @@ export default function Home() {
         <h1>Fotos limpas.<br /><em>Em poucos segundos.</em></h1>
         <p>A IA encontra marcas d&apos;água, reconstrói o fundo e mantém você no controle de cada detalhe.</p>
 
-        <div className="upload-card" id="upload">
-          <div className="upload-orbit"><ImageIcon size={28} /></div>
-          <h2>Solte sua imagem aqui</h2>
-          <p>ou escolha um arquivo do seu dispositivo</p>
-          <Button>Escolher imagem <ArrowUpRight size={16} /></Button>
-          <small>JPG, PNG ou WebP · até 20 MB</small>
-        </div>
+        <RemoveItWorkflow />
 
         <div className="trust-row" id="privacidade">
           <span><ShieldCheck size={16} /> Processamento seguro</span>
